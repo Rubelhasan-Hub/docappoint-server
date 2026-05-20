@@ -42,6 +42,11 @@ async function run() {
             const result = await doctorsCollection.findOne({ _id: new ObjectId(id) })
             res.json(result)
         })
+        app.get('/booking/:userId', async (req, res) => {
+            const { userId } = req.params
+            const result = await bookingCollection.find({ userId: userId }).toArray()
+            res.json(result)
+        })
 
         app.post('/booking', async (req, res) => {
             const bookingData = req.body;
