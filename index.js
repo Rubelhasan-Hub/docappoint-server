@@ -14,6 +14,7 @@ app.use(express.json())
 
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { createRemoteJWKSet, jwtVerify } = require("jose-cjs");
 const uri = process.env.MONGO_URI
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -25,6 +26,33 @@ const client = new MongoClient(uri, {
     }
 });
 
+const jwks = createRemoteJWKSet(
+    new URL("http://localhost:3000/api/auth/jwks")
+)
+
+const verifyToken = async (req, res, next) => {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+        return res.status(401).json({ message: "No token provided" });
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    if (!token) {
+        return res.status(401).json({ message: "Invalid token" });
+    }
+
+    try {
+        const { payload } = await jwtVerify(token, jwks)
+        console.log(payload);
+
+        next();
+    } catch (error) {
+        return res.status(403).json({ message: "Forbidden" });
+    }
+};
+
 async function run() {
     try {
         await client.connect();
@@ -32,9 +60,15 @@ async function run() {
         const db = client.db("docappoinment")
         const doctorsCollection = db.collection("doctors")
         const bookingCollection = db.collection("booking")
+        const sortDoctorCollection = db.collection("3doctors")
 
-        app.get('/doctors', async (req, res) => {
+        app.get('/doctors', verifyToken, async (req, res) => {
             const result = await doctorsCollection.find().sort({ rating: -1 }).toArray()
+
+            res.json(result)
+        })
+        app.get('/3doctors', async (req, res) => {
+            const result = await sortDoctorCollection.find().sort({ rating: -1 }).toArray()
             res.json(result)
         })
         app.get('/doctors/:id', async (req, res) => {
@@ -53,8 +87,13 @@ async function run() {
             const result = await bookingCollection.updateOne(
                 { userId: userId },
                 { $set: updatedAppointment }
-            ).
-                res.json(result)
+            );
+            res.json(result);
+        })
+        app.delete('/booking/:userId', async (req, res) => {
+            const { userId } = req.params
+            const result = await bookingCollection.deleteOne({ userId: userId })
+            res.json(result)
         })
 
         app.post('/booking', async (req, res) => {
