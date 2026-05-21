@@ -47,6 +47,15 @@ async function run() {
             const result = await bookingCollection.find({ userId: userId }).toArray()
             res.json(result)
         })
+        app.patch('/booking/:userId', async (req, res) => {
+            const { userId } = req.params
+            const updatedAppointment = req.body
+            const result = await bookingCollection.updateOne(
+                { userId: userId },
+                { $set: updatedAppointment }
+            ).
+                res.json(result)
+        })
 
         app.post('/booking', async (req, res) => {
             const bookingData = req.body;
