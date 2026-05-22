@@ -73,12 +73,12 @@ async function run() {
             const result = await sortDoctorCollection.find().sort({ rating: -1 }).toArray()
             res.json(result)
         })
-        app.get('/doctors/:id',verifyToken, async (req, res) => {
+        app.get('/doctors/:id', async (req, res) => {
             const { id } = req.params
             const result = await doctorsCollection.findOne({ _id: new ObjectId(id) })
             res.json(result)
         })
-        app.get('/booking/:userId', verifyToken, async (req, res) => {
+        app.get('/booking/:userId', async (req, res) => {
             const { userId } = req.params
             const result = await bookingCollection.find({ userId: userId }).toArray()
             res.json(result)
