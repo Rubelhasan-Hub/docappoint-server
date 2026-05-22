@@ -9,14 +9,8 @@ const app = express()
 
 const port = process.env.PORT || 5000
 
-app.use(
-    cors({
-        origin: "https://docappoint-client.vercel.app",
-        credentials: true,
-    })
-);
-app.options("*", cors({
-    origin: "https://docappoint-client.vercel.app",
+app.use(cors({
+    origin: 'https://docappoint-client.vercel.app',
     credentials: true,
 }));
 app.use(express.json())
@@ -79,12 +73,12 @@ async function run() {
             const result = await sortDoctorCollection.find().sort({ rating: -1 }).toArray()
             res.json(result)
         })
-        app.get('/doctors/:id', async (req, res) => {
+        app.get('/doctors/:id',verifyToken, async (req, res) => {
             const { id } = req.params
             const result = await doctorsCollection.findOne({ _id: new ObjectId(id) })
             res.json(result)
         })
-        app.get('/booking/:userId', async (req, res) => {
+        app.get('/booking/:userId', verifyToken, async (req, res) => {
             const { userId } = req.params
             const result = await bookingCollection.find({ userId: userId }).toArray()
             res.json(result)
